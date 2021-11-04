@@ -40,15 +40,11 @@ contract Escrow {
         address _buyer
     ) private
     {
-
-        // IMPORTANT make sure gotchi not for sale already!!!
-
         // add sale to seller
         sellers[_seller].push(GotchiSale(_gotchi, _price, _buyer));
         uint256 sale_index = sellers[_seller].length - 1;
         // add reference to buyer
         buyers[_buyer].push(SaleRef(_seller, sale_index));
-
     }
 
     function getSale(address _seller, uint256 _index) public returns (
@@ -111,7 +107,6 @@ contract Escrow {
     //    require(isBuyer(_buyer), "Cannot get sales: No sale found");
     //    return buyers[_buyer].length;
     //}
-
 
     function sellGotchi(
         uint256 _gotchi,
