@@ -22,9 +22,13 @@ contract Escrow {
         address buyer;
     }
 
-    mapping(address => GotchiSale ) public gotchiSales;
-    mapping(address => uint256) public balances;
-    mapping(address => address) public buyers;
+    struct SaleRef {
+        address seller;
+        uint256 index;
+    }
+
+    mapping(address => GotchiSale[]) public sellers;
+    mapping(address => SaleRef[]) public buyers;
 
     constructor() {
     }
@@ -36,60 +40,78 @@ contract Escrow {
         address _buyer
     ) private
     {
-        require(
-            !isSeller(_seller),
-            "Cannot add sale: Seller already has ongoing sale"
-        );
 
-        GotchiSale storage sale = gotchiSales[_seller];
+        // IMPORTANT make sure gotchi not for sale already!!!
 
-        sale.gotchi = _gotchi;
-        sale.price = _price;
-        sale.buyer = _buyer;
+        // add sale to seller
+        sellers[_seller].push(GotchiSale(_gotchi, _price, _buyer));
+        uint256 sale_index = sellers[_seller].length - 1;
+        // add reference to buyer
+        buyers[_buyer].push(SaleRef(_seller, sale_index));
 
     }
 
-    function getSale(address _seller) public returns (
+    function getSale(address _seller, uint256 _index) public returns (
         uint256,
         uint256,
         address
     ) {
-        require(isSeller(_seller), "Cannot get sale: No sale found");
-        GotchiSale storage sale = gotchiSales[_seller];
+        require(isSeller(_seller), "Cannot get sale: No sales found");
+
+        GotchiSale storage sale = sellers[_seller][_index];
 
         return(sale.gotchi, sale.price, sale.buyer);
     }
 
-    function addBuyer(address _buyer, address _seller) private {
-        buyers[_buyer] = _seller;
-    }
+    function removeSale(address _seller, uint256 _index ) private {
+        require(isSeller(_seller), "Cannot remove sale: No sales found");
 
-    function removeBuyer(address _buyer) private {
-        buyers[_buyer] = address(0);
+        uint256 length = sellers[_seller].length;
+        address buyer = sellers[_seller][_index].buyer;
+        uint256 gotchi = sellers[_seller][_index].gotchi;
+        uint256 buyer_sales = buyers[buyer].length;
+
+        sellers[_seller][_index] = sellers[_seller][length - 1];
+        sellers[_seller].pop();
+
+        for(uint i=0; i < buyer_sales; i++) {
+            if (buyers[buyer][i].seller == _seller) {
+                uint256 sale_index = buyers[buyer][i].index;
+                if (sellers[_seller][sale_index].gotchi == gotchi) {
+                    buyers[buyer][i] = buyers[buyer][buyer_sales - 1];
+                    buyers[buyer].pop();
+                }
+            }
+        }
     }
+    //function addBuyer(address _buyer, address _seller) private {
+    //    buyers[_buyer] = _seller;
+    //}
+
+    //function removeBuyer(address _buyer) private {
+    //    buyers[_buyer] = address(0);
+    //}
 
     function isBuyer(address _buyer) private returns (bool) {
         // default is false
-        return buyers[_buyer] != address(0);
+        if (buyers[_buyer].length > 0) {
+            return true;
+        }
+        return false;
     }
 
     function isSeller(address _seller) private returns (bool) {
-        if (gotchiSales[_seller].price != 0) {
+        if (sellers[_seller].length > 0) {
           return true;
         }
         return false;
     }
 
-    function getSeller(address _buyer) external returns (address) {
-        require(isBuyer(_buyer), "Cannot get seller: No sale found");
-        return buyers[_buyer];
-    }
+    //function getSellerSales(address _seller) external returns (unint256) {
+    //    require(isBuyer(_buyer), "Cannot get sales: No sale found");
+    //    return buyers[_buyer].length;
+    //}
 
-    function removeSale(address _seller) private {
-        require(isSeller(_seller), "Cannot remove sale: No sale found");
-        // deleted sales have a price of 0
-        gotchiSales[_seller].price = 0;
-    }
 
     function sellGotchi(
         uint256 _gotchi,
@@ -108,27 +130,29 @@ contract Escrow {
         );
         // transfer gotchi to contract
         aavegotchi.safeTransferFrom(msg.sender, address(this), _gotchi, "");
-        addBuyer(_buyer, msg.sender);
+        //addBuyer(_buyer, msg.sender);
         addSale(msg.sender, _gotchi, _price, _buyer);
         emit newSale(msg.sender, _gotchi);
     }
 
-    function abortGotchiSale() external {
+    function abortGotchiSale(uint256 _index) external {
         require(isSeller(msg.sender), "Cannot abort: No sales found");
-        removeSale(msg.sender);
-        uint256 gotchi = gotchiSales[msg.sender].gotchi;
+        removeSale(msg.sender, _index);
+        uint256 gotchi = sellers[msg.sender][_index].gotchi;
         aavegotchi.safeTransferFrom(address(this), msg.sender, gotchi, "");
         emit abortSale(msg.sender, gotchi);
     }
 
-    function buyGotchi() external payable {
-        require(isBuyer(msg.sender), "Cannot buy: No offer found");
-        address seller = buyers[msg.sender];
-        GotchiSale storage sale = gotchiSales[seller];
+    function buyGotchi(uint256 _index) external payable {
+        require(isBuyer(msg.sender), "Cannot buy: No offers found");
+
+        address seller = buyers[msg.sender][_index].seller;
+        uint256 sale_index = buyers[msg.sender][_index].index;
+        GotchiSale storage sale = sellers[seller][sale_index];
+
         // deposit amount to contract
         SafeERC20.safeTransferFrom(GHST, msg.sender, address(this), sale.price);
-        removeSale(seller);
-        removeBuyer(msg.sender);
+        removeSale(seller, sale_index);
         // transfer gotchi to buyer
         aavegotchi.safeTransferFrom(address(this), msg.sender, sale.gotchi, "");
         // send amount to seller
