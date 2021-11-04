@@ -80,13 +80,6 @@ contract Escrow {
             }
         }
     }
-    //function addBuyer(address _buyer, address _seller) private {
-    //    buyers[_buyer] = _seller;
-    //}
-
-    //function removeBuyer(address _buyer) private {
-    //    buyers[_buyer] = address(0);
-    //}
 
     function isBuyer(address _buyer) private returns (bool) {
         // default is false
@@ -103,10 +96,15 @@ contract Escrow {
         return false;
     }
 
-    //function getSellerSales(address _seller) external returns (unint256) {
-    //    require(isBuyer(_buyer), "Cannot get sales: No sale found");
-    //    return buyers[_buyer].length;
-    //}
+    function getBuyerSalesCount(address _buyer) external returns (uint256) {
+        require(isBuyer(_buyer), "No sales found");
+        return buyers[_buyer].length;
+    }
+
+    function getSellerSalesCount(address _seller) external returns (uint256) {
+        require(isSeller(_seller), "No sales found");
+        return sellers[_seller].length;
+    }
 
     function sellGotchi(
         uint256 _gotchi,
