@@ -113,17 +113,11 @@ contract Escrow {
     ) external
     {
         require(
-            !isSeller(msg.sender),
-            "Cannot add sale: Sale already in progress"
-        );
-        // sales with price = 0 are deleted sales
-        require(
             _price > 0,
             "Cannot add sale: Price must be greater than 0"
         );
         // transfer gotchi to contract
         aavegotchi.safeTransferFrom(msg.sender, address(this), _gotchi, "");
-        //addBuyer(_buyer, msg.sender);
         addSale(msg.sender, _gotchi, _price, _buyer);
         emit newSale(msg.sender, _gotchi);
     }
