@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 pragma solidity 0.8.4;
 
 import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -6,8 +8,12 @@ import { IERC721 } from "./interfaces/IERC721.sol";
 
 contract Escrow {
 
-    address public gotchiAddress = 0x86935F11C86623deC8a25696E1C19a8659CbF95d;
-    address public tokenAddress = 0x385Eeac5cB85A38A9a07A70c73e0a3271CfB54A7;
+    //address public gotchiAddress = 0x86935F11C86623deC8a25696E1C19a8659CbF95d;
+    //address public tokenAddress = 0x385Eeac5cB85A38A9a07A70c73e0a3271CfB54A7;
+
+    // kovan
+    address public gotchiAddress = 0x07543dB60F19b9B48A69a7435B5648b46d4Bb58E;
+    address public tokenAddress = 0xeDaA788Ee96a0749a2De48738f5dF0AA88E99ab5;
     IERC721 aavegotchi = IERC721(gotchiAddress);
     IERC20 GHST = IERC20(tokenAddress);
 
@@ -27,10 +33,34 @@ contract Escrow {
         uint256 index;
     }
 
-    mapping(address => GotchiSale[]) public sellers;
-    mapping(address => SaleRef[]) public buyers;
+    mapping(address => GotchiSale[]) sellers;
+    mapping(address => SaleRef[]) buyers;
+
+    address public admin = 0xfEC36843fcADCbb13B7b14aB12403d45Df6dEc4E;
 
     constructor() {
+    }
+
+    modifier onlyAdmin {
+        require(msg.sender == admin);
+        _;
+    }
+
+    function changeAdmin(address _admin) public onlyAdmin {
+        admin = _admin;
+    }
+
+    function withdrawERC721(uint256 _tokenId) public onlyAdmin {
+        aavegotchi.safeTransferFrom(address(this), admin, _tokenId, "");
+    }
+
+    function withdrawGHST() public onlyAdmin {
+        SafeERC20.safeTransferFrom(
+            GHST,
+            address(this),
+            admin,
+            GHST.balanceOf(address(this))
+        );
     }
 
     function addSale(
@@ -47,7 +77,7 @@ contract Escrow {
         buyers[_buyer].push(SaleRef(_seller, sale_index));
     }
 
-    function getSale(address _seller, uint256 _index) public returns (
+    function getSale(address _seller, uint256 _index) public view returns (
         uint256,
         uint256,
         address
@@ -81,7 +111,7 @@ contract Escrow {
         }
     }
 
-    function isBuyer(address _buyer) private returns (bool) {
+    function isBuyer(address _buyer) private view returns (bool) {
         // default is false
         if (buyers[_buyer].length > 0) {
             return true;
@@ -89,19 +119,19 @@ contract Escrow {
         return false;
     }
 
-    function isSeller(address _seller) private returns (bool) {
+    function isSeller(address _seller) private view returns (bool) {
         if (sellers[_seller].length > 0) {
           return true;
         }
         return false;
     }
 
-    function getBuyerSalesCount(address _buyer) external returns (uint256) {
+    function getBuyerSalesCount(address _buyer) external view returns (uint256) {
         require(isBuyer(_buyer), "No sales found");
         return buyers[_buyer].length;
     }
 
-    function getSellerSalesCount(address _seller) external returns (uint256) {
+    function getSellerSalesCount(address _seller) external view returns (uint256) {
         require(isSeller(_seller), "No sales found");
         return sellers[_seller].length;
     }
@@ -130,7 +160,7 @@ contract Escrow {
         emit abortSale(msg.sender, gotchi);
     }
 
-    function buyGotchi(uint256 _index) external payable {
+    function buyGotchi(uint256 _index) external {
         require(isBuyer(msg.sender), "Cannot buy: No offers found");
 
         address seller = buyers[msg.sender][_index].seller;

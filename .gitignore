@@ -25,6 +25,7 @@ yarn-error.log*
 node_modules
 .env
 address.txt
+contract.txt
 
 #Hardhat files
 cache
