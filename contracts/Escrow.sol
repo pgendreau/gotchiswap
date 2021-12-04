@@ -92,23 +92,34 @@ contract Escrow {
     function removeSale(address _seller, uint256 _index ) private {
         require(isSeller(_seller), "Cannot remove sale: No sales found");
 
+        // number of sales for seller
         uint256 length = sellers[_seller].length;
+        // the buyer for that sale
         address buyer = sellers[_seller][_index].buyer;
+        // the gotchi for that sale
         uint256 gotchi = sellers[_seller][_index].gotchi;
+        // number of sales for that buyer
         uint256 buyer_sales = buyers[buyer].length;
 
-        sellers[_seller][_index] = sellers[_seller][length - 1];
-        sellers[_seller].pop();
-
-        for(uint i=0; i < buyer_sales; i++) {
+        // for each sales of the buyer
+        for(uint i=0; i < buyer_sales - 1; i++) {
+            // if from that seller
             if (buyers[buyer][i].seller == _seller) {
+                // get the sale index
                 uint256 sale_index = buyers[buyer][i].index;
+                // check if it is for that particular gotchi
                 if (sellers[_seller][sale_index].gotchi == gotchi) {
+                    // replace that sale with the last one
                     buyers[buyer][i] = buyers[buyer][buyer_sales - 1];
+                    // remove last sale
                     buyers[buyer].pop();
                 }
             }
         }
+
+        // update seller's sales to remove to last sale
+        sellers[_seller][_index] = sellers[_seller][length - 1];
+        sellers[_seller].pop();
     }
 
     function isBuyer(address _buyer) private view returns (bool) {
@@ -154,8 +165,8 @@ contract Escrow {
 
     function abortGotchiSale(uint256 _index) external {
         require(isSeller(msg.sender), "Cannot abort: No sales found");
-        removeSale(msg.sender, _index);
         uint256 gotchi = sellers[msg.sender][_index].gotchi;
+        removeSale(msg.sender, _index);
         aavegotchi.safeTransferFrom(address(this), msg.sender, gotchi, "");
         emit abortSale(msg.sender, gotchi);
     }
@@ -167,14 +178,18 @@ contract Escrow {
         uint256 sale_index = buyers[msg.sender][_index].index;
         GotchiSale storage sale = sellers[seller][sale_index];
 
-        // deposit amount to contract
-        SafeERC20.safeTransferFrom(GHST, msg.sender, address(this), sale.price);
+        uint256 gotchi = sale.gotchi;
+        uint256 price = sale.price;
+
         removeSale(seller, sale_index);
+
+        // deposit amount to contract
+        SafeERC20.safeTransferFrom(GHST, msg.sender, address(this), price);
         // transfer gotchi to buyer
-        aavegotchi.safeTransferFrom(address(this), msg.sender, sale.gotchi, "");
+        aavegotchi.safeTransferFrom(address(this), msg.sender, gotchi, "");
         // send amount to seller
-        SafeERC20.safeTransferFrom(GHST, address(this), seller, sale.price);
-        emit concludeSale(msg.sender, sale.gotchi);
+        SafeERC20.safeTransferFrom(GHST, address(this), seller, price);
+        emit concludeSale(msg.sender, gotchi);
     }
 
     function onERC721Received(
