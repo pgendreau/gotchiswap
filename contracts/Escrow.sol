@@ -92,8 +92,6 @@ contract Escrow {
     function removeSale(address _seller, uint256 _index ) private {
         require(isSeller(_seller), "Cannot remove sale: No sales found");
 
-        // number of sales for seller
-        uint256 length = sellers[_seller].length;
         // the buyer for that sale
         address buyer = sellers[_seller][_index].buyer;
         // the gotchi for that sale
@@ -102,7 +100,7 @@ contract Escrow {
         uint256 buyer_sales = buyers[buyer].length;
 
         // for each sales of the buyer
-        for(uint i=0; i < buyer_sales - 1; i++) {
+        for(uint i=0; i < buyer_sales; i++) {
             // if from that seller
             if (buyers[buyer][i].seller == _seller) {
                 // get the sale index
@@ -118,6 +116,7 @@ contract Escrow {
         }
 
         // update seller's sales to remove to last sale
+        uint256 length = sellers[_seller].length;
         sellers[_seller][_index] = sellers[_seller][length - 1];
         sellers[_seller].pop();
     }
