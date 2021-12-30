@@ -14,5 +14,13 @@
 }
 
 .connect-wallet-button {
-    background: rgb(32, 129, 226);
+    background: rgb(114, 23, 244);
+}
+
+.buy-button {
+    background: rgb(55, 245, 248);
+}
+
+.sell-button {
+    background: rgb(249, 51, 246);
 }

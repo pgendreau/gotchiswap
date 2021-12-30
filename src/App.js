@@ -5,7 +5,14 @@ import { ethers } from 'ethers';
 import contract from './artifacts/contracts/Escrow.sol/Escrow.json';
 
 const contractAddress = "0xBef4c6C2c5Fed6B1d19c1508f955Cb39E2383C4f";
-const abi = contract.abi;
+const ghstAddress = "0xeDaA788Ee96a0749a2De48738f5dF0AA88E99ab5";
+const contractAbi = contract.abi;
+
+const erc20Abi = [
+  "function balanceOf(address owner) view returns (uint256)",
+  "function approve(address _spender, uint256 _value) public returns (bool success)",
+  "function allowance(address _owner, address _spender) public view returns (uint256 remaining)",
+];
 
 function App() {
 
@@ -29,6 +36,97 @@ function App() {
       setCurrentAccount(account);
     } else {
       console.log("No authorized account found");
+    }
+  }
+
+  const approveGhst = async (amount) => {
+    try {
+      const { ethereum } = window;
+
+      if (ethereum) {
+        let abi = ["function approve(address _spender, uint256 _value) public returns (bool success)"];
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        const contract = new ethers.Contract(ghstAddress, abi, signer);
+        
+        console.log("Approving GHST spending");
+        let txn = await contract.approve(
+            contractAddress,
+            ethers.utils.parseEther(amount)
+        );
+
+        console.log("Mining... please wait");
+        await txn.wait();
+
+        console.log(
+          `Mined, see transaction: https://kovan.etherscan.io/tx/${txn.hash}`
+        );
+
+      } else {
+        console.log("Ethereum object does not exist");
+      }
+
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  const sellHandler = async () => {
+    try {
+      const { ethereum } = window;
+
+      if (ethereum) {
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        const contract = new ethers.Contract(contractAddress, contractAbi, signer);
+
+        console.log("Creating sale");
+        let txn = await contract.sellGotchi(
+          1901,
+          ethers.utils.parseEther("427"),
+          '0xfEC36843fcADCbb13B7b14aB12403d45Df6dEc4E'
+        );
+
+        console.log("Mining... please wait");
+        await txn.wait();
+
+        console.log(
+          `Mined, see transaction: https://kovan.etherscan.io/tx/${txn.hash}`
+        );
+
+      } else {
+        console.log("Ethereum object does not exist");
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  const buyHandler = async () => {
+    try {
+      const { ethereum } = window;
+
+      if (ethereum) {
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        const contract = new ethers.Contract(contractAddress, contractAbi, signer);
+
+        console.log("Initialize payment");
+        let txn = await contract.buyGotchi(0);
+
+        console.log("Mining... please wait");
+        await txn.wait();
+
+        console.log(
+          `Mined, see transaction: https://kovan.etherscan.io/tx/${txn.hash}`
+        );
+
+      } else {
+        console.log("Ethereum object does not exist");
+      }
+
+    } catch (err) {
+      console.log(err);
     }
   }
 
@@ -57,6 +155,19 @@ function App() {
     )
   }
 
+  const buttons = () => {
+    return (
+      <div>
+        <button onClick={sellHandler} className='cta-button sell-button'>
+          Sell
+        </button>
+        <button onClick={buyHandler} className='cta-button buy-button'>
+          Buy
+        </button>
+      </div>
+    )
+  }
+
   useEffect(() => {
     checkWalletIsConnected();
   }, [])
@@ -65,7 +176,7 @@ function App() {
     <div className='main-app'>
       <h1>GotchiSwap main page</h1>
       <div>
-        {connectWalletButton()}
+        {currentAccount ? buttons() : connectWalletButton()}
       </div>
     </div>
   )
