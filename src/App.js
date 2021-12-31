@@ -22,14 +22,11 @@ const erc20Abi = [
 function App() {
 
   const [currentAccount, setCurrentAccount] = useState(null);
-  const [isAllowed, setAllowed] = useState(null);
-
-  
-  const checkAllowed = async () => {
-      setAllowed(false);
-  }
+  const [allowance, setAllowance] = useState(0);
+  //const [approval, setApproval] = useState(false);
 
   const checkWalletIsConnected = async () => {
+
     const { ethereum } = window;
 
     if (!ethereum) {
@@ -58,44 +55,16 @@ function App() {
         const provider = new ethers.providers.Web3Provider(ethereum);
         const contract = new ethers.Contract(ghstAddress, erc20Abi, provider);
         const allowance = await contract.allowance(owner, contractAddress);
-        return (
-            parseInt(allowance)
-        );
+        console.log("Current allowance: ", allowance.toString());
+        setAllowance(allowance.toString());
       }
     } catch (err) {
       console.log(err);
     }
   }
 
-  const approveGhst = async (amount) => {
-    try {
-      const { ethereum } = window;
-
-      if (ethereum) {
-        const provider = new ethers.providers.Web3Provider(ethereum);
-        const signer = provider.getSigner();
-        const contract = new ethers.Contract(ghstAddress, erc20Abi, signer);
-        
-        console.log("Approving GHST spending");
-        let txn = await contract.approve(
-            contractAddress,
-            ethers.utils.parseEther(amount)
-        );
-
-        console.log("Mining... please wait");
-        await txn.wait();
-
-        console.log(
-          `Mined, see transaction: https://kovan.etherscan.io/tx/${txn.hash}`
-        );
-
-      } else {
-        console.log("Ethereum object does not exist");
-      }
-
-    } catch (err) {
-      console.log(err);
-    }
+  const checkAllowance = () => {
+    return parseInt(allowance) >= parseInt(price)
   }
 
   const sellHandler = async () => {
@@ -136,17 +105,35 @@ function App() {
       if (ethereum) {
         const provider = new ethers.providers.Web3Provider(ethereum);
         const signer = provider.getSigner();
-        const contract = new ethers.Contract(contractAddress, contractAbi, signer);
 
-        console.log("Initialize payment");
-        let txn = await contract.buyGotchi(0);
+        if (checkAllowance()) {
 
-        console.log("Mining... please wait");
-        await txn.wait();
+          const contract = new ethers.Contract(contractAddress, contractAbi, signer);
+          console.log("Initialize payment");
+          let txn = await contract.buyGotchi(0);
+          console.log("Mining... please wait");
+          await txn.wait();
 
-        console.log(
-          `Mined, see transaction: https://kovan.etherscan.io/tx/${txn.hash}`
-        );
+          console.log(
+            `Mined, see transaction: https://kovan.etherscan.io/tx/${txn.hash}`
+          );
+
+        } else {
+
+          const contract = new ethers.Contract(ghstAddress, erc20Abi, signer);
+          console.log("Approving GHST spending");
+          let txn = await contract.approve(
+              contractAddress,
+              price.toString()
+          );
+          console.log("Mining... please wait");
+          await txn.wait();
+
+          console.log(
+            `Mined, see transaction: https://kovan.etherscan.io/tx/${txn.hash}`
+          );
+
+        }
 
       } else {
         console.log("Ethereum object does not exist");
@@ -181,39 +168,14 @@ function App() {
     )
   }
 
-  const buyButton = () => {
-    getAllowance().then(
-      allowance => {
-        console.log("Allowance: ", allowance.toString());
-        console.log("Price: ", price.toString());
-        if (parseInt(allowance) >= parseInt(price)) {
-            console.log("Sufficient allowance")
-            return(
-              <button onClick={buyHandler} className='cta-button buy-button'>
-                Buy 
-              </button>
-            )
-        } else {
-            console.log("Insufficient allowance, need to approve GHST")
-            return(
-              <button onClick={approveGhst(ethers.utils.formatEther(price))} className='cta-button buy-button'>
-                Approve GHST
-              </button>
-            )
-        }
-      }
-    );
-  }
-
   const buttons = () => {
-    buyButton();
     return(
       <div>
         <button onClick={sellHandler} className='cta-button sell-button'>
           Sell
         </button>
         <button onClick={buyHandler} className='cta-button buy-button'>
-          {isAllowed ? 'Buy' : 'Approve GHST'} 
+          {checkAllowance() ? 'Buy' : 'Approve GHST'} 
         </button>
       </div>
     );
@@ -221,7 +183,7 @@ function App() {
 
   useEffect(() => {
     checkWalletIsConnected();
-    checkAllowed();
+    getAllowance()
   }, [])
 
   return (
