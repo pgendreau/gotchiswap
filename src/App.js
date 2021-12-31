@@ -8,6 +8,11 @@ const contractAddress = "0xBef4c6C2c5Fed6B1d19c1508f955Cb39E2383C4f";
 const ghstAddress = "0xeDaA788Ee96a0749a2De48738f5dF0AA88E99ab5";
 const contractAbi = contract.abi;
 
+// tmp
+const owner = '0xfEC36843fcADCbb13B7b14aB12403d45Df6dEc4E';
+const price = ethers.utils.parseEther("427");
+const id = 1901;
+
 const erc20Abi = [
   "function balanceOf(address owner) view returns (uint256)",
   "function approve(address _spender, uint256 _value) public returns (bool success)",
@@ -17,6 +22,12 @@ const erc20Abi = [
 function App() {
 
   const [currentAccount, setCurrentAccount] = useState(null);
+  const [isAllowed, setAllowed] = useState(null);
+
+  
+  const checkAllowed = async () => {
+      setAllowed(false);
+  }
 
   const checkWalletIsConnected = async () => {
     const { ethereum } = window;
@@ -39,15 +50,31 @@ function App() {
     }
   }
 
+  const getAllowance = async () => {
+    try {
+      const { ethereum } = window;
+
+      if (ethereum) {
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const contract = new ethers.Contract(ghstAddress, erc20Abi, provider);
+        const allowance = await contract.allowance(owner, contractAddress);
+        return (
+            parseInt(allowance)
+        );
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
   const approveGhst = async (amount) => {
     try {
       const { ethereum } = window;
 
       if (ethereum) {
-        let abi = ["function approve(address _spender, uint256 _value) public returns (bool success)"];
         const provider = new ethers.providers.Web3Provider(ethereum);
         const signer = provider.getSigner();
-        const contract = new ethers.Contract(ghstAddress, abi, signer);
+        const contract = new ethers.Contract(ghstAddress, erc20Abi, signer);
         
         console.log("Approving GHST spending");
         let txn = await contract.approve(
@@ -82,9 +109,9 @@ function App() {
 
         console.log("Creating sale");
         let txn = await contract.sellGotchi(
-          1901,
-          ethers.utils.parseEther("427"),
-          '0xfEC36843fcADCbb13B7b14aB12403d45Df6dEc4E'
+          id,
+          price,
+          owner
         );
 
         console.log("Mining... please wait");
@@ -146,7 +173,6 @@ function App() {
     }
   }
 
-
   const connectWalletButton = () => {
     return (
       <button onClick={connectWalletHandler} className='cta-button connect-wallet-button'>
@@ -155,21 +181,47 @@ function App() {
     )
   }
 
+  const buyButton = () => {
+    getAllowance().then(
+      allowance => {
+        console.log("Allowance: ", allowance.toString());
+        console.log("Price: ", price.toString());
+        if (parseInt(allowance) >= parseInt(price)) {
+            console.log("Sufficient allowance")
+            return(
+              <button onClick={buyHandler} className='cta-button buy-button'>
+                Buy 
+              </button>
+            )
+        } else {
+            console.log("Insufficient allowance, need to approve GHST")
+            return(
+              <button onClick={approveGhst(ethers.utils.formatEther(price))} className='cta-button buy-button'>
+                Approve GHST
+              </button>
+            )
+        }
+      }
+    );
+  }
+
   const buttons = () => {
-    return (
+    buyButton();
+    return(
       <div>
         <button onClick={sellHandler} className='cta-button sell-button'>
           Sell
         </button>
         <button onClick={buyHandler} className='cta-button buy-button'>
-          Buy
+          {isAllowed ? 'Buy' : 'Approve GHST'} 
         </button>
       </div>
-    )
+    );
   }
 
   useEffect(() => {
     checkWalletIsConnected();
+    checkAllowed();
   }, [])
 
   return (
