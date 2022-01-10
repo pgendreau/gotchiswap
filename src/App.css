@@ -3,6 +3,11 @@
     margin: 100px;
 }
 
+.header {
+    text-align: center;
+    margin: 100px;
+}
+
 .cta-button {
     padding: 15px;
     border: none;
