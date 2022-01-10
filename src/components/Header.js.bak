@@ -1,0 +1,30 @@
+import React from 'react';
+
+
+import logo from '../images/logo.png';
+
+const connectWalletPressed = async () => {
+    const walletResponse = await connectWallet();
+    setStatus(walletResponse.status);
+    setWallet(walletResponse.address);
+};
+
+const Header = () => {
+  return (
+    <header>
+      <img src={logo} alt="Gotchiswap Logo" />
+//      <button id="walletButton" onClick={connectWalletPressed}>
+//        {walletAddress.length > 0 ? (
+//          "Connected: " +
+//          String(walletAddress).substring(0, 6) +
+//          "..." +
+//          String(walletAddress).substring(38)
+//        ) : (
+//          <span>Connect Wallet</span>
+//        )}
+//      </button>
+    </header>
+  );
+};
+
+export default Header;
