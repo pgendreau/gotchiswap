@@ -5,8 +5,8 @@ const Buy = () => {
     document.title = 'Gotchiswap: Buy';
   });
   return (
-    <div>
-      <h1>Gotchiswap Buy</h1>
+    <div className='main-app'>
+      <h2>Buy</h2>
       <p>My Offers</p>
     </div>
   );

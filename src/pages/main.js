@@ -1,5 +1,5 @@
 import React from 'react';
-import {Link} from 'react-router-dom'
+import {Link} from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { ethers } from 'ethers';
 
@@ -75,7 +75,7 @@ const Main = () => {
 
   return (
     <div className='main-app'>
-      <h1>GotchiSwap Main Page</h1>
+      <h2>Main Page</h2>
       <div>
         {currentAccount ? buttons() : connectWalletButton()}
       </div>

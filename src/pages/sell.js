@@ -1,12 +1,18 @@
 import React, { useEffect } from 'react';
+import {Link} from 'react-router-dom';
 
 const Sell = () => {
   useEffect(() => {
     document.title = 'Gotchiswap: Sell';
   });
   return (
-    <div>
-      <h1>Gotchiswap Sell</h1>
+    <div className='main-app'>
+      <h2>Sell</h2>
+      <Link to='/create'>
+        <button className='cta-button sell-button'>
+          Create Sale 
+        </button>
+      </Link>
       <p>My Sales</p>
     </div>
   );

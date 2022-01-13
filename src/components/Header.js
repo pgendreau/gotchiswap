@@ -1,12 +1,12 @@
 import React from 'react';
 
-
 import logo from '../images/logo.png';
 
 const Header = () => {
   return (
     <div class="header">
-      <img src={logo} alt="Gotchiswap Logo" />
+      <a href="/"><img src={logo} alt="Gotchiswap Logo" /><a>
+      <h1>Gotchiswap</h1>
     </div>
   );
 };
