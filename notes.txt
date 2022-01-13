@@ -1,0 +1,2 @@
+- favicon
+- price in eth 
