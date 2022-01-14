@@ -77,6 +77,17 @@ contract Escrow {
         buyers[_buyer].push(SaleRef(_seller, sale_index));
     }
 
+    function getOffer(address _buyer, uint256 _index) public view returns (
+        address,
+        uint256
+    ) {
+        require(isBuyer(_buyer), "Cannot get offer: No offers found");
+
+        SaleRef storage offer = buyers[_buyer][_index];
+
+        return(offer.seller, offer.index);
+    }
+
     function getSale(address _seller, uint256 _index) public view returns (
         uint256,
         uint256,

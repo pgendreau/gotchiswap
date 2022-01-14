@@ -1,2 +1,3 @@
 - favicon
 - price in eth 
+- validate fields create sale

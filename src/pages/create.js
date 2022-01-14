@@ -4,12 +4,13 @@ import { useState, useEffect } from "react";
 import { ethers } from 'ethers';
 
 import contract from '../artifacts/contracts/Escrow.sol/Escrow.json';
-const contractAddress = "0xBef4c6C2c5Fed6B1d19c1508f955Cb39E2383C4f";
+const contractAddress = "0x0A46Ff3e5c6B5F43ee85A20fec1349AC0460D035";
 const contractAbi = contract.abi;
 
 const Sell = () => {
   const [id, setId] = useState("");
   const [price, setPrice] = useState("");
+  const [buyer, setBuyer] = useState("");
   const [currentAccount, setCurrentAccount] = useState(null);
   //const [approval, setApproval] = useState(false);
 
@@ -50,7 +51,7 @@ const Sell = () => {
         let txn = await contract.sellGotchi(
           id,
           priceInWei,
-          currentAccount
+          buyer 
         );
 
 
@@ -89,6 +90,13 @@ const Sell = () => {
             type="text"
             value={price}
             onChange={(e) => setPrice(e.target.value)}
+          />
+        </label>
+        <label>To:
+          <input
+            type="text"
+            value={buyer}
+            onChange={(e) => setBuyer(e.target.value)}
           />
         </label>
       </form>
