@@ -1,6 +1,5 @@
 import React from 'react';
 import { useState, useEffect } from "react";
-
 import { ethers } from 'ethers';
 
 import contract from '../artifacts/contracts/Escrow.sol/Escrow.json';
@@ -11,7 +10,6 @@ const Sell = () => {
   const [id, setId] = useState("");
   const [price, setPrice] = useState("");
   const [buyer, setBuyer] = useState("");
-  const [currentAccount, setCurrentAccount] = useState(null);
   //const [approval, setApproval] = useState(false);
 
   const checkWalletIsConnected = async () => {
@@ -30,7 +28,6 @@ const Sell = () => {
     if (accounts.length !== 0) {
       const account = accounts[0];
       console.log("Found an authorized account: ", account);
-      setCurrentAccount(account);
     } else {
       console.log("No authorized account found");
     }
