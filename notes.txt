@@ -1,3 +1,4 @@
 - favicon
 - price in eth 
 - validate fields create sale
+- const vs fonction

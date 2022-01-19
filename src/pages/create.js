@@ -67,8 +67,8 @@ const Sell = () => {
     }
   }
   useEffect(() => {
-    checkWalletIsConnected();
     document.title = 'Gotchiswap: Create Sale';
+    checkWalletIsConnected();
   });
 
   return (
