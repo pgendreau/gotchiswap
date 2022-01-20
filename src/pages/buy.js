@@ -22,8 +22,8 @@ const Buy = () => {
 
   const [currentAccount, setCurrentAccount] = useState(0);
   const [allowance, setAllowance] = useState(0);
+  const [sales, setSales] = useState([]);
   //const [offersCount, setOffersCount] = useState(0);
-  //const [sales, setSales] = useState([]);
 
   const checkWalletIsConnected = async () => {
 
@@ -96,7 +96,7 @@ const Buy = () => {
     try {
       const { ethereum } = window;
 
-      const sales = [];
+      const tmpSales = [];
       const offers = await getOffers();
 
       console.log("Offers: ", offers.toString());
@@ -111,14 +111,16 @@ const Buy = () => {
           console.log("Index: ", index);
           const sale = await contract.getSale(seller, index);
           console.log("Sale: ", sale.toString());
-          sales.push(sale);
+          
+          tmpSales.push(
+            { 'id': sale[0], 'price': sale[1], 'seller': sale[2] }
+          );
         };
 
       }
         
-      console.log("Sales: ", sales.toString());
-      //setSales(sales);
-      return sales;
+      console.log("Sales: ", tmpSales.toString());
+      setSales(tmpSales);
 
     } catch (err) {
       console.log(err);
@@ -181,7 +183,7 @@ const Buy = () => {
     getSales();
     // move out
     //getAllowance();
-  });
+  },[currentAccount]);
 
   const columns = [
     { field: 'id', headerName: 'Gotchi Id', width: 70, identity: true },
@@ -189,25 +191,13 @@ const Buy = () => {
     { field: 'seller', headerName: 'Seller', width: 130 },
   ];
 
-//  const rows = [[1901, 427, "0xfEC36843fcADCbb13B7b14aB12403d45Df6dEc4E"]].reduce(
-//    function(sale) {
-//      return {
-//        'id': sale[0],
-//        'price': sale[1],
-//        'seller': sale[2]
-//      },
-//      {} 
-//    }
-//  );
+//  const rows= [{
+//        'id': 1901,
+//        'price': price,
+//        'seller': "0xfEC36843fcADCbb13B7b14aB12403d45Df6dEc4E"
+//  }];
 
-
-  const rows = [
-    {
-      'id': 1901,
-      'price': price,
-      'seller': "0xfEC36843fcADCbb13B7b14aB12403d45Df6dEc4E"
-    }
-  ];
+  const rows = sales;
     
   return (
     <div className='main-app'>
@@ -216,7 +206,6 @@ const Buy = () => {
       {console.log("Rows: ", rows)}
       <div style={{ height: 400, width: '100%' }}>
         <DataGrid
-          id={Math.random()}
           rows={rows}
           columns={columns}
           pageSize={5}
