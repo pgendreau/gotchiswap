@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import Grid from "@material-ui/core/Grid";
 import { ethers } from 'ethers';
-import { DataGrid } from '@mui/x-data-grid';
 
 import contract from '../artifacts/contracts/Escrow.sol/Escrow.json';
 
@@ -20,10 +20,10 @@ const price = ethers.utils.parseEther("427");
 
 const Buy = () => {
 
-  const [currentAccount, setCurrentAccount] = useState(0);
-  const [allowance, setAllowance] = useState(0);
+  const [currentAccount, setCurrentAccount] = useState(null);
+  const [allowance, setAllowance] = useState();
   const [sales, setSales] = useState([]);
-  //const [offersCount, setOffersCount] = useState(0);
+  const hasLoadedSales = useRef(true);
 
   const checkWalletIsConnected = async () => {
 
@@ -65,12 +65,12 @@ const Buy = () => {
 
   const getOffers = async () => {
 
-    const offers = [];
+    const _offers = [];
 
     try {
       const { ethereum } = window;
 
-      if (ethereum) {
+      if (ethereum && currentAccount) {
         const provider = new ethers.providers.Web3Provider(ethereum);
         const contract = new ethers.Contract(contractAddress, contractAbi, provider);
         const salesCount = await contract.getBuyerSalesCount(currentAccount);
@@ -79,12 +79,12 @@ const Buy = () => {
           console.log("i: ", i);
           const offer = await contract.getOffer(currentAccount, i);
           console.log("Offer: ", offer);
-          offers.push(offer);
+          _offers.push(offer);
         };
 
       }
         
-      return offers;
+      return _offers;
 
     } catch (err) {
       console.log(err);
@@ -96,12 +96,12 @@ const Buy = () => {
     try {
       const { ethereum } = window;
 
-      const tmpSales = [];
+      const _sales = [];
       const offers = await getOffers();
 
       console.log("Offers: ", offers.toString());
 
-      if (ethereum) {
+      if (ethereum && currentAccount) {
         const provider = new ethers.providers.Web3Provider(ethereum);
         const contract = new ethers.Contract(contractAddress, contractAbi, provider);
         for (let i = 0; i < offers.length; i++) {
@@ -112,15 +112,15 @@ const Buy = () => {
           const sale = await contract.getSale(seller, index);
           console.log("Sale: ", sale.toString());
           
-          tmpSales.push(
+          _sales.push(
             { 'id': sale[0], 'price': sale[1], 'seller': sale[2] }
           );
         };
 
       }
         
-      console.log("Sales: ", tmpSales.toString());
-      setSales(tmpSales);
+      console.log("Sales: ", _sales.toString());
+      setSales(_sales);
 
     } catch (err) {
       console.log(err);
@@ -181,15 +181,16 @@ const Buy = () => {
     document.title = 'Gotchiswap: Buy';
     checkWalletIsConnected();
     getSales();
-    // move out
-    //getAllowance();
+    if (!hasLoadedSales.current) {
+      hasLoadedSales.current = true;
+    };
   },[currentAccount]);
 
-  const columns = [
-    { field: 'id', headerName: 'Gotchi Id', width: 70, identity: true },
-    { field: 'price', headerName: 'Price', width:  90 },
-    { field: 'seller', headerName: 'Seller', width: 130 },
-  ];
+//  const columns = [
+//    { field: 'id', headerName: 'Gotchi Id', width: 70, identity: true },
+//    { field: 'price', headerName: 'Price', width:  90 },
+//    { field: 'seller', headerName: 'Seller', width: 130 },
+//  ];
 
 //  const rows= [{
 //        'id': 1901,
@@ -198,23 +199,12 @@ const Buy = () => {
 //  }];
 
   const rows = sales;
-    
+
   return (
     <div className='main-app'>
       <h2>Buy</h2>
-      <p>My Offers</p>
+      {rows === undefined ? <p>Loading...</p> : <p>My Offers</p>}
       {console.log("Rows: ", rows)}
-      <div style={{ height: 400, width: '100%' }}>
-        <DataGrid
-          rows={rows}
-          columns={columns}
-          pageSize={5}
-          rowsPerPageOptions={[5]}
-        />
-      </div>
-      <button onClick={buyHandler} className='cta-button buy-button'>
-        {checkAllowance() ? 'Buy' : 'Approve GHST'} 
-      </button>
     </div>
   );
 };
