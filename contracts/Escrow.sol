@@ -118,17 +118,23 @@ contract Escrow {
                 uint256 sale_index = buyers[buyer][i].index;
                 // check if it is for that particular gotchi
                 if (sellers[_seller][sale_index].gotchi == gotchi) {
-                    // replace that sale with the last one
-                    buyers[buyer][i] = buyers[buyer][buyer_sales - 1];
-                    // remove last sale
+                    // if so remove offer
+                    for(uint j=i; j < buyer_sales -1; j++) {
+                        buyers[buyer][j] = buyers[buyer][j+1];
+                    }
+                    // remove last offer
                     buyers[buyer].pop();
+                    break;
                 }
             }
         }
 
-        // update seller's sales to remove to last sale
+        // update seller's sales
         uint256 length = sellers[_seller].length;
-        sellers[_seller][_index] = sellers[_seller][length - 1];
+        // remove sale (preserve order)
+        for (uint i = _index; i < length - 1; i++) {
+	        sellers[_seller][i] = sellers[_seller][i+1];
+        }
         sellers[_seller].pop();
     }
 

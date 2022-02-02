@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { ethers } from 'ethers';
 
 import contract from '../artifacts/contracts/Escrow.sol/Escrow.json';
-const contractAddress = "0x0A46Ff3e5c6B5F43ee85A20fec1349AC0460D035";
+const contractAddress = "0x062eB84c5832822C6e98E4FCC012Fc9709157270";
 const contractAbi = contract.abi;
 
 const Sell = () => {
@@ -75,27 +75,31 @@ const Sell = () => {
     <div className='main-app'>
       <h2>Create Sale</h2>
       <form>
-        <label>Gotchi Id:
-          <input
-            type="text"
-            value={id}
-            onChange={(e) => setId(e.target.value)}
-          />
-        </label>
-        <label>Price:
-          <input
-            type="text"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-          />
-        </label>
-        <label>To:
-          <input
-            type="text"
-            value={buyer}
-            onChange={(e) => setBuyer(e.target.value)}
-          />
-        </label>
+        <p>
+          <label>Gotchi Id:
+            <input
+              type="text"
+              value={id}
+              onChange={(e) => setId(e.target.value)}
+            />
+          </label>
+        </p><p>
+          <label>Price:
+            <input
+              type="text"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+            />
+          </label>
+        </p><p>
+          <label>To:
+            <input
+              type="text"
+              value={buyer}
+              onChange={(e) => setBuyer(e.target.value)}
+            />
+          </label>
+        </p>
       </form>
       <button onClick={addSaleHandler} className='cta-button sell-button'>
         New Sale

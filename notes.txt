@@ -3,3 +3,4 @@
 - validate fields create sale
 - const vs fonction
 - exception on no sales
+- check gotchi already on sale

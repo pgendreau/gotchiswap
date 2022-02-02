@@ -4,7 +4,7 @@ import { ethers } from 'ethers';
 
 import contract from '../artifacts/contracts/Escrow.sol/Escrow.json';
 
-const contractAddress = "0x0A46Ff3e5c6B5F43ee85A20fec1349AC0460D035";
+const contractAddress = "0x062eB84c5832822C6e98E4FCC012Fc9709157270";
 const ghstAddress = "0xeDaA788Ee96a0749a2De48738f5dF0AA88E99ab5";
 const contractAbi = contract.abi;
 
@@ -13,10 +13,6 @@ const erc20Abi = [
   "function approve(address _spender, uint256 _value) public returns (bool success)",
   "function allowance(address _owner, address _spender) public view returns (uint256 remaining)",
 ];
-
-// tmp
-const price = ethers.utils.parseEther("427");
-//const currentAccount = "0xfEC36843fcADCbb13B7b14aB12403d45Df6dEc4E";
 
 const Buy = () => {
 
@@ -113,7 +109,7 @@ const Buy = () => {
           console.log("Sale: ", sale.toString());
           
           _sales.push(
-            { 'id': sale[0], 'price': sale[1], 'seller': sale[2] }
+            { 'id': sale[0], 'price': sale[1], 'seller': seller }
           );
         };
 
@@ -127,11 +123,11 @@ const Buy = () => {
     }
   }
 
-  const checkAllowance = () => {
+  const checkAllowance = (price) => {
     return parseInt(allowance) >= parseInt(price)
   }
 
-  const buyHandler = async () => {
+  const buyHandler = async (price, index) => {
     try {
       const { ethereum } = window;
 
@@ -139,11 +135,11 @@ const Buy = () => {
         const provider = new ethers.providers.Web3Provider(ethereum);
         const signer = provider.getSigner();
 
-        if (checkAllowance()) {
+        if (checkAllowance(price)) {
 
           const contract = new ethers.Contract(contractAddress, contractAbi, signer);
           console.log("Initialize payment");
-          let txn = await contract.buyGotchi(0);
+          let txn = await contract.buyGotchi(index);
           console.log("Mining... please wait");
           await txn.wait();
 
@@ -180,23 +176,12 @@ const Buy = () => {
   useEffect(() => {
     document.title = 'Gotchiswap: Buy';
     checkWalletIsConnected();
+    getAllowance();
     getSales();
     if (!hasLoadedSales.current) {
       hasLoadedSales.current = true;
     };
-  },[currentAccount]);
-
-//  const columns = [
-//    { field: 'id', headerName: 'Gotchi Id', width: 70, identity: true },
-//    { field: 'price', headerName: 'Price', width:  90 },
-//    { field: 'seller', headerName: 'Seller', width: 130 },
-//  ];
-
-//  const rows= [{
-//        'id': 1901,
-//        'price': price,
-//        'seller': "0xfEC36843fcADCbb13B7b14aB12403d45Df6dEc4E"
-//  }];
+  },[currentAccount, allowance]);
 
   const rows = sales;
 
@@ -205,6 +190,16 @@ const Buy = () => {
       <h2>Buy</h2>
       {rows === undefined ? <p>Loading...</p> : <p>My Offers</p>}
       {console.log("Rows: ", rows)}
+      {rows.map((row, index) => (
+        <Grid key={row.id}>
+          <p>Id: {parseInt(row.id)}</p>
+          <p>Price: {parseInt(ethers.utils.formatEther(row.price))}</p>
+          <p>Seller: {row.seller}</p>
+          <button onClick={() => buyHandler(row.price, index)} className='cta-button buy-button'>
+            {checkAllowance(row.price) ? 'Buy' : 'Approve GHST'} 
+          </button>
+        </Grid>
+      ))}
     </div>
   );
 };

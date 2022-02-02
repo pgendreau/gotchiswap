@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import {Link} from 'react-router-dom';
+import Grid from "@material-ui/core/Grid";
 import { ethers } from 'ethers';
 
 import contract from '../artifacts/contracts/Escrow.sol/Escrow.json';
 
-const contractAddress = "0x0A46Ff3e5c6B5F43ee85A20fec1349AC0460D035";
+const contractAddress = "0x062eB84c5832822C6e98E4FCC012Fc9709157270";
 const contractAbi = contract.abi;
 
 
@@ -34,6 +35,33 @@ const Sell = () => {
     }
   }
 
+  const abortHandler = async (index) => {
+    try {
+      const { ethereum } = window;
+
+      if (ethereum) {
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+
+        const contract = new ethers.Contract(contractAddress, contractAbi, signer);
+        console.log("Aborting sale: ", index);
+        let txn = await contract.abortGotchiSale(index);
+        console.log("Mining... please wait");
+        await txn.wait();
+
+        console.log(
+          `Mined, see transaction: https://kovan.etherscan.io/tx/${txn.hash}`
+        );
+
+      } else {
+        console.log("Ethereum object does not exist");
+      }
+
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
   const getSales = async () => {
 
     try {
@@ -52,7 +80,9 @@ const Sell = () => {
           console.log("i: ", i);
           const sale = await contract.getSale(currentAccount, i);
           console.log("Sale: ", sale);
-          _sales.push(sale);
+          _sales.push(
+            { 'id': sale[0], 'price': sale[1], 'buyer': sale[2] }
+          );
         };
 
       }
@@ -71,15 +101,28 @@ const Sell = () => {
     console.log("Sales: ", sales);
   }, [currentAccount]);
 
+  const rows = sales;
+
   return (
     <div className='main-app'>
       <h2>Sell</h2>
+      {rows === undefined ? <p>Loading...</p> : <p>My Sales</p>}
+      {console.log("Rows: ", rows)}
+      {rows.map((row, index) => (
+        <Grid key={row.id}>
+          <p>Id: {parseInt(row.id)}</p>
+          <p>Price: {parseInt(ethers.utils.formatEther(row.price))}</p>
+          <p>To: {row.buyer}</p>
+          <button onClick={() => abortHandler(index)} className='cta-button buy-button'>
+            Abort
+          </button>
+        </Grid>
+      ))}
       <Link to='/create'>
         <button className='cta-button sell-button'>
           Create Sale 
         </button>
       </Link>
-      <p>My Sales</p>
     </div>
   );
 };
