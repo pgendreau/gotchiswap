@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { ethers } from 'ethers';
 
 import contract from '../artifacts/contracts/Escrow.sol/Escrow.json';
-const contractAddress = "0x7Be9bFf4c44cdb8FC4c7a0edD2fB0DdD3cF1b4a6";
+const contractAddress = "0xf6Fc59d9225b7f4b920126A6A5a4ABE4E8BF344A";
 const contractAbi = contract.abi;
 
 const Sell = () => {
