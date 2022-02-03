@@ -103,13 +103,14 @@ const Buy = () => {
         for (let i = 0; i < offers.length; i++) {
           const seller = offers[i][0];
           console.log("Seller: ", seller);
-          const index = offers[i][1];
-          console.log("Index: ", index);
+          const id = offers[i][1];
+          console.log("Id: ", id);
+          const index = await contract.getSaleIndex(seller, id);
           const sale = await contract.getSale(seller, index);
           console.log("Sale: ", sale.toString());
           
           _sales.push(
-            { 'id': sale[0], 'price': sale[1], 'seller': seller }
+            { 'id': sale[0], 'gotchi': sale[1], 'price': sale[2], 'seller': seller }
           );
         };
 
@@ -192,7 +193,7 @@ const Buy = () => {
       {console.log("Rows: ", rows)}
       {rows.map((row, index) => (
         <Grid key={row.id}>
-          <p>Id: {parseInt(row.id)}</p>
+          <p>Gotchi Id: {parseInt(row.gotchi)}</p>
           <p>Price: {parseInt(ethers.utils.formatEther(row.price))}</p>
           <p>Seller: {row.seller}</p>
           <button onClick={() => buyHandler(row.price, index)} className='cta-button buy-button'>

@@ -81,7 +81,7 @@ const Sell = () => {
           const sale = await contract.getSale(currentAccount, i);
           console.log("Sale: ", sale);
           _sales.push(
-            { 'id': sale[0], 'price': sale[1], 'buyer': sale[2] }
+            { 'id': sale[0], 'gotchi': sale[1], 'price': sale[2], 'buyer': sale[3] }
           );
         };
 
@@ -110,7 +110,7 @@ const Sell = () => {
       {console.log("Rows: ", rows)}
       {rows.map((row, index) => (
         <Grid key={row.id}>
-          <p>Id: {parseInt(row.id)}</p>
+          <p>Gotchi Id: {parseInt(row.gotchi)}</p>
           <p>Price: {parseInt(ethers.utils.formatEther(row.price))}</p>
           <p>To: {row.buyer}</p>
           <button onClick={() => abortHandler(index)} className='cta-button buy-button'>

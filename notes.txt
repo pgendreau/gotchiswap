@@ -4,3 +4,6 @@
 - const vs fonction
 - exception on no sales
 - check gotchi already on sale
+- make private saleId
+- wait on abort 
+- autorefresh

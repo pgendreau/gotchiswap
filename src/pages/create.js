@@ -7,7 +7,7 @@ const contractAddress = "0x12fD9E1227091442d20e78A4c98AD61C58baeAe0";
 const contractAbi = contract.abi;
 
 const Sell = () => {
-  const [id, setId] = useState("");
+  const [gotchi, setGotchi] = useState("");
   const [price, setPrice] = useState("");
   const [buyer, setBuyer] = useState("");
   //const [approval, setApproval] = useState(false);
@@ -46,7 +46,7 @@ const Sell = () => {
 
         console.log("Creating sale");
         let txn = await contract.sellGotchi(
-          id,
+          gotchi,
           priceInWei,
           buyer 
         );
@@ -79,8 +79,8 @@ const Sell = () => {
           <label>Gotchi Id:
             <input
               type="text"
-              value={id}
-              onChange={(e) => setId(e.target.value)}
+              value={gotchi}
+              onChange={(e) => setGotchi(e.target.value)}
             />
           </label>
         </p><p>
