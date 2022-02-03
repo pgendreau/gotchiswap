@@ -4,7 +4,7 @@ import { ethers } from 'ethers';
 
 import contract from '../artifacts/contracts/Escrow.sol/Escrow.json';
 
-const contractAddress = "0xf6Fc59d9225b7f4b920126A6A5a4ABE4E8BF344A";
+const contractAddress = "0x12fD9E1227091442d20e78A4c98AD61C58baeAe0";
 const ghstAddress = "0xeDaA788Ee96a0749a2De48738f5dF0AA88E99ab5";
 const contractAbi = contract.abi;
 

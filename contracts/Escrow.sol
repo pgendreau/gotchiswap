@@ -23,6 +23,7 @@ contract Escrow {
     event abortSale(address indexed seller, uint256 indexed gotchi);
 
     struct GotchiSale {
+        uint256 id;
         uint256 gotchi;
         uint256 price;
         address buyer;
@@ -30,13 +31,19 @@ contract Escrow {
 
     struct SaleRef {
         address seller;
-        uint256 index;
+        uint256 id;
     }
 
     mapping(address => GotchiSale[]) sellers;
     mapping(address => SaleRef[]) buyers;
 
     address public admin = 0xfEC36843fcADCbb13B7b14aB12403d45Df6dEc4E;
+
+    uint public saleId;
+  
+    function getSaleId() public returns (uint) {
+      return saleId++;
+    }
 
     constructor() {
     }
@@ -71,10 +78,10 @@ contract Escrow {
     ) private
     {
         // add sale to seller
-        sellers[_seller].push(GotchiSale(_gotchi, _price, _buyer));
-        uint256 sale_index = sellers[_seller].length - 1;
+        uint256 id = getSaleId();
+        sellers[_seller].push(GotchiSale(id, _gotchi, _price, _buyer));
         // add reference to buyer
-        buyers[_buyer].push(SaleRef(_seller, sale_index));
+        buyers[_buyer].push(SaleRef(_seller, id));
     }
 
     function getOffer(address _buyer, uint256 _index) public view returns (
@@ -85,10 +92,11 @@ contract Escrow {
 
         SaleRef storage offer = buyers[_buyer][_index];
 
-        return(offer.seller, offer.index);
+        return(offer.seller, offer.id);
     }
 
     function getSale(address _seller, uint256 _index) public view returns (
+        uint256,
         uint256,
         uint256,
         address
@@ -97,7 +105,7 @@ contract Escrow {
 
         GotchiSale storage sale = sellers[_seller][_index];
 
-        return(sale.gotchi, sale.price, sale.buyer);
+        return(sale.id, sale.gotchi, sale.price, sale.buyer);
     }
 
     function removeSale(address _seller, uint256 _index ) private {
@@ -106,20 +114,18 @@ contract Escrow {
         // the buyer for that sale
         address buyer = sellers[_seller][_index].buyer;
         // the gotchi for that sale
-        uint256 gotchi = sellers[_seller][_index].gotchi;
+        uint256 id = sellers[_seller][_index].id;
         // number of sales for that buyer
         uint256 buyer_sales = buyers[buyer].length;
 
         // for each sales of the buyer
-        for(uint i=0; i < buyer_sales; i++) {
+        for (uint i=0; i < buyer_sales; i++) {
             // if from that seller
             if (buyers[buyer][i].seller == _seller) {
-                // get the sale index
-                uint256 sale_index = buyers[buyer][i].index;
-                // check if it is for that particular gotchi
-                if (sellers[_seller][sale_index].gotchi == gotchi) {
+                // check if it is for that sale
+                if (buyers[buyer][i].id == id) {
                     // if so remove offer
-                    for(uint j=i; j < buyer_sales -1; j++) {
+                    for (uint j=i; j < buyer_sales -1; j++) {
                         buyers[buyer][j] = buyers[buyer][j+1];
                     }
                     // remove last offer
@@ -187,11 +193,20 @@ contract Escrow {
         emit abortSale(msg.sender, gotchi);
     }
 
+    function getSaleIndex(address _seller, uint256 _id) public view returns (uint256) {
+        for (uint i = 0; i < sellers[_seller].length; i++) {
+	        if (sellers[_seller][i].id == _id) {
+                return i;
+            }
+        }
+    }
+
     function buyGotchi(uint256 _index) external {
         require(isBuyer(msg.sender), "Cannot buy: No offers found");
 
         address seller = buyers[msg.sender][_index].seller;
-        uint256 sale_index = buyers[msg.sender][_index].index;
+        uint256 id = buyers[msg.sender][_index].id;
+        uint256 sale_index = getSaleIndex(seller, id);
         GotchiSale storage sale = sellers[seller][sale_index];
 
         uint256 gotchi = sale.gotchi;
