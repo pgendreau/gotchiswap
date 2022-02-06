@@ -38,7 +38,7 @@ const Sell = () => {
     }
   }
 
-  const checkApproval = async () => {
+  const checkApprovalForAll = async () => {
     try {
       const { ethereum } = window;
 
@@ -51,11 +51,32 @@ const Sell = () => {
             aavegotchiDiamondAbi,
             provider
         );
-        const isApprovedForAll = await contract.isApprovedForAll('0xfEC36843fcADCbb13B7b14aB12403d45Df6dEc4E', contractAddress);
+        const isApprovedForAll = await contract.isApprovedForAll(currentAccount, contractAddress);
         console.log("Approved For All: ", isApprovedForAll);
         setApproval(isApprovedForAll);
       }
 
+
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  const checkApproval = async () => {
+    try {
+      const { ethereum } = window;
+
+      if (ethereum) {
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const contract = new ethers.Contract(
+            aavegotchiDiamondAddress,
+            aavegotchiDiamondAbi,
+            provider
+        );
+        const approved = await contract.getApproved(gotchi);
+        console.log("Approved: ", approved);
+        setApproval(approved == contractAddress);
+      }
 
     } catch (err) {
       console.log(err);
@@ -91,7 +112,7 @@ const Sell = () => {
 
         } else {
             const contract = new ethers.Contract(aavegotchiDiamondAddress, aavegotchiDiamondAbi, signer);
-            let txn = await contract.approve(gotchi);
+            let txn = await contract.approve(contractAddress, gotchi);
 
             console.log("mining... please wait");
             await txn.wait();
@@ -113,7 +134,7 @@ const Sell = () => {
     document.title = 'Gotchiswap: Create Sale';
     checkWalletIsConnected();
     checkApproval()
-  }, [currentAccount, isApproved]);
+  }, [currentAccount, gotchi, isApproved]);
 
   return (
     <div className='main-app'>
