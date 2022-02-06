@@ -2,15 +2,19 @@ import React from 'react';
 import { useState, useEffect } from "react";
 import { ethers } from 'ethers';
 
+import aavegotchiDiamondAbi from "../artifacts/contracts/aavegotchiDiamondAbi.json";
 import contract from '../artifacts/contracts/Escrow.sol/Escrow.json';
 const contractAddress = "0x12fD9E1227091442d20e78A4c98AD61C58baeAe0";
 const contractAbi = contract.abi;
+const aavegotchiDiamondAddress = "0x07543dB60F19b9B48A69a7435B5648b46d4Bb58E";
+
 
 const Sell = () => {
-  const [gotchi, setGotchi] = useState("");
-  const [price, setPrice] = useState("");
-  const [buyer, setBuyer] = useState("");
-  //const [approval, setApproval] = useState(false);
+  const [gotchi, setGotchi] = useState(null);
+  const [price, setPrice] = useState(null);
+  const [buyer, setBuyer] = useState(null);
+  const [isApproved, setApproval] = useState(false);
+  const [currentAccount, setCurrentAccount] = useState(null);
 
   const checkWalletIsConnected = async () => {
 
@@ -28,8 +32,33 @@ const Sell = () => {
     if (accounts.length !== 0) {
       const account = accounts[0];
       console.log("Found an authorized account: ", account);
+      setCurrentAccount(account);
     } else {
       console.log("No authorized account found");
+    }
+  }
+
+  const checkApproval = async () => {
+    try {
+      const { ethereum } = window;
+
+      if (ethereum && currentAccount) {
+        console.log("aavegotchiDiamondAddress: ", aavegotchiDiamondAddress);
+        console.log("aavegotchiDiamondAbi: ", aavegotchiDiamondAbi);
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const contract = new ethers.Contract(
+            aavegotchiDiamondAddress,
+            aavegotchiDiamondAbi,
+            provider
+        );
+        const isApprovedForAll = await contract.isApprovedForAll('0xfEC36843fcADCbb13B7b14aB12403d45Df6dEc4E', contractAddress);
+        console.log("Approved For All: ", isApprovedForAll);
+        setApproval(isApprovedForAll);
+      }
+
+
+    } catch (err) {
+      console.log(err);
     }
   }
 
@@ -40,24 +69,38 @@ const Sell = () => {
       if (ethereum) {
         const provider = new ethers.providers.Web3Provider(ethereum);
         const signer = provider.getSigner();
-        const contract = new ethers.Contract(contractAddress, contractAbi, signer);
 
-        const priceInWei = ethers.utils.parseEther(price);
+        if (isApproved) {
+            const contract = new ethers.Contract(contractAddress, contractAbi, signer);
 
-        console.log("Creating sale");
-        let txn = await contract.sellGotchi(
-          gotchi,
-          priceInWei,
-          buyer 
-        );
+            const priceInWei = ethers.utils.parseEther(price);
 
+            console.log("Creating sale");
+            let txn = await contract.sellGotchi(
+              gotchi,
+              priceInWei,
+              buyer 
+            );
 
-        console.log("Mining... please wait");
-        await txn.wait();
+            console.log("mining... please wait");
+            await txn.wait();
 
-        console.log(
-          `Mined, see transaction: https://kovan.etherscan.io/tx/${txn.hash}`
-        );
+            console.log(
+              `mined, see transaction: https://kovan.etherscan.io/tx/${txn.hash}`
+            );
+
+        } else {
+            const contract = new ethers.Contract(aavegotchiDiamondAddress, aavegotchiDiamondAbi, signer);
+            let txn = await contract.approve(gotchi);
+
+            console.log("mining... please wait");
+            await txn.wait();
+
+            console.log(
+              `mined, see transaction: https://kovan.etherscan.io/tx/${txn.hash}`
+            );
+
+        }
 
       } else {
         console.log("Ethereum object does not exist");
@@ -69,7 +112,8 @@ const Sell = () => {
   useEffect(() => {
     document.title = 'Gotchiswap: Create Sale';
     checkWalletIsConnected();
-  });
+    checkApproval()
+  }, [currentAccount, isApproved]);
 
   return (
     <div className='main-app'>
@@ -102,7 +146,7 @@ const Sell = () => {
         </p>
       </form>
       <button onClick={addSaleHandler} className='cta-button sell-button'>
-        New Sale
+        {isApproved ? 'New Sale' : 'Approve Gotchi transfer'} 
       </button>
     </div>
   );
