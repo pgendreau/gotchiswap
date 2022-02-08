@@ -141,7 +141,7 @@ const Sell = () => {
       <h2>Create Sale</h2>
       <form>
         <p>
-          <label>Gotchi Id:
+          <label>Gotchi Id:&nbsp;
             <input
               type="text"
               value={gotchi}
@@ -149,7 +149,7 @@ const Sell = () => {
             />
           </label>
         </p><p>
-          <label>Price:
+          <label>Price:&nbsp;
             <input
               type="text"
               value={price}
@@ -157,7 +157,7 @@ const Sell = () => {
             />
           </label>
         </p><p>
-          <label>To:
+          <label>To:&nbsp;
             <input
               type="text"
               value={buyer}
