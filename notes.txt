@@ -8,3 +8,4 @@
 - wait on abort 
 - autorefresh
 - network detection
+- update approval automatically (loading...)
